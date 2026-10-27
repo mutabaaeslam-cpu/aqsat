@@ -252,6 +252,39 @@ details.adv[open] summary svg{transform:rotate(180deg)}
 .spin{width:22px;height:22px;border:3px solid currentColor;border-top-color:transparent;border-radius:50%;animation:sp .8s linear infinite;display:inline-block}
 @keyframes sp{to{transform:rotate(360deg)}}
 
+.c-res{background:var(--brand);color:var(--on-brand);border-radius:var(--r-lg);padding:18px;margin:4px 0 14px;position:relative;overflow:hidden}
+.c-res .lbl{font-size:13px;opacity:.75}
+.c-res .big{font-size:40px;font-weight:900;line-height:1.15;letter-spacing:-1px}
+.c-res .big small{font-size:15px;font-weight:700;opacity:.8;letter-spacing:0}
+.c-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.c-grid div{background:rgba(255,255,255,.08);border-radius:12px;padding:8px 10px}
+.c-grid small{display:block;font-size:11.5px;opacity:.75}
+.c-grid strong{font-size:15px;font-weight:800}
+.c-grid .hot strong{color:var(--gold-soft)}
+.c-note{font-size:13px;background:var(--gold-soft);border-radius:var(--r-md);padding:10px 14px;margin-bottom:14px;line-height:1.7}
+.c-note b{font-weight:800}
+.c-box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px;margin-bottom:12px}
+.c-box h3{font-size:15px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.c-box h3 .tag{font-size:11px;padding:1px 8px;border-radius:99px;background:var(--ok-soft);color:var(--ok)}
+.c-row2{display:grid;grid-template-columns:1.3fr 1fr;gap:8px}
+.c-chart{display:flex;align-items:flex-end;gap:2px;height:110px;margin:10px 0 6px;direction:ltr}
+.c-chart i{flex:1;display:flex;flex-direction:column-reverse;border-radius:3px 3px 0 0;overflow:hidden;min-width:2px}
+.c-chart i b{display:block;background:var(--brand-2)} .c-chart i u{display:block;background:var(--gold)}
+.c-legend{display:flex;gap:14px;font-size:12px;color:var(--ink-2)}
+.c-legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-left:5px;vertical-align:-1px;background:var(--brand-2)}
+.c-legend span.g::before{background:var(--gold)}
+.c-table{width:100%;border-collapse:collapse;font-size:13px}
+.c-table th{font-weight:700;color:var(--ink-3);text-align:right;padding:6px 4px;border-bottom:1px solid var(--line);font-size:12px}
+.c-table td{padding:6px 4px;border-bottom:1px solid var(--line)}
+.c-scroll{max-height:280px;overflow:auto}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cmp .c-box{padding:12px;margin:0}
+.cmp .c-box.win{border-color:var(--ok);box-shadow:0 0 0 2px var(--ok-soft)}
+.cmp .k{font-size:11.5px;color:var(--ink-3);margin-top:8px} .cmp .v{font-weight:800;font-size:15px}
+.cmp .field{margin-bottom:8px} .cmp .field label{font-size:12px} .cmp .input{padding:9px 10px;font-size:15px}
+.cmp .seg button{font-size:12px;padding:6px 2px}
+.flash{animation:flash .5s}
+@keyframes flash{0%{opacity:.4;transform:translateY(3px)}100%{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -336,6 +369,7 @@ const ICON = {
   check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
   close:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>',
+  calc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2.5" width="14" height="19" rx="3"/><path d="M8.5 6.5h7"/><path d="M9 11h.01M12 11h.01M15 11h.01M9 14.5h.01M12 14.5h.01M15 14.5h.01M9 18h.01M12 18h3"/></svg>',
   edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>'
 };
 
@@ -504,8 +538,8 @@ async function logout(){
 }
 
 /* ================= shell ================= */
-const TABS = [["due","المتابعة","list"],["plans","أقساطي","cards"],["settings","الإعدادات","gear"]];
-const TITLES = {due:"المتابعة", plans:"أقساطي", settings:"الإعدادات"};
+const TABS = [["due","المتابعة","list"],["plans","أقساطي","cards"],["calc","الحاسبة","calc"],["settings","الإعدادات","gear"]];
+const TITLES = {due:"المتابعة", plans:"أقساطي", calc:"الحاسبة", settings:"الإعدادات"};
 function renderShell(){
   $("#app").innerHTML = `
     <header class="topbar"><h1 id="ttl"></h1>${S.status.role === "beta" ? '<span class="beta-tag">تجريبي</span>' : ""}<span class="sync" id="sync"></span></header>
@@ -513,8 +547,7 @@ function renderShell(){
     <nav class="nav" aria-label="التنقل"><div class="nav-in">
       ${tabBtn(TABS[0])}${tabBtn(TABS[1])}
       <div class="fab-slot"><button class="fab" id="fab" aria-label="إضافة قسط">${ICON.plus}</button></div>
-      ${tabBtn(TABS[2])}
-      <button class="tab" style="visibility:hidden" aria-hidden="true" tabindex="-1">${ICON.list}<span>.</span></button>
+      ${tabBtn(TABS[2])}${tabBtn(TABS[3])}
     </div></nav>`;
   document.querySelectorAll(".nav .tab[data-t]").forEach(b => b.onclick = () => go(b.dataset.t));
   $("#fab").onclick = () => openForm();
@@ -530,7 +563,7 @@ function renderView(animate, fromLeft){
   const m = $("#main"); if (!m) return;
   $("#ttl").textContent = TITLES[S.tab];
   document.querySelectorAll(".nav .tab[data-t]").forEach(b => { b.classList.toggle("on", b.dataset.t === S.tab); b.setAttribute("aria-current", b.dataset.t === S.tab ? "page" : "false"); });
-  const html = S.tab === "due" ? viewDue() : S.tab === "plans" ? viewPlans() : viewSettings();
+  const html = S.tab === "due" ? viewDue() : S.tab === "plans" ? viewPlans() : S.tab === "calc" ? viewCalc() : viewSettings();
   m.innerHTML = `<div class="view ${animate ? (fromLeft ? "fromLeft" : "") : ""}" style="${animate ? "" : "animation:none"}">${html}</div>`;
   bindView();
   if (S.tab === "plans") requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll(".card .bar i").forEach(i => i.style.width = i.dataset.w)));
@@ -652,6 +685,7 @@ function bindView(){
     if (e.target.closest("[data-add]")) return openForm();
     if (e.target.closest("#more")){ S.dueLimit += 40; renderView(false); }
   };
+  if (S.tab === "calc") return bindCalc();
   if (S.tab !== "settings") return;
   const tok = S.status.calendar_token;
   $("#copyCal") && ($("#copyCal").onclick = async () => { try{ await navigator.clipboard.writeText(CAL_URL + tok); toast("اتنسخ الرابط"); }catch(e){ const r = document.createRange(); r.selectNodeContents($("#cal")); getSelection().removeAllRanges(); getSelection().addRange(r); toast("حدد الرابط وانسخه"); } });
@@ -799,9 +833,9 @@ function bindDetail(pid){
 }
 
 /* ================= add / edit form ================= */
-function openForm(pid){
+function openForm(pid, prefill){
   const ex = pid ? S.plans[pid].data : null;
-  const F = ex ? structuredClone(ex) : {kind:"new", freq:"monthly", phases:[], extras:[]};
+  const F = ex ? structuredClone(ex) : Object.assign({kind:"new", freq:"monthly", phases:[], extras:[]}, prefill||{});
   F.phases = F.phases || []; F.extras = F.extras || [];
   const isEdit = !!ex;
   const body = `<form id="pf" novalidate>
@@ -921,6 +955,164 @@ function openForm(pid){
     const id = pid || uid(); putPlan(id, out); closeSheet();
     toast(isEdit ? "اتحفظت التعديلات" : "اتضاف القسط");
     if (!isEdit && S.tab === "settings") go("due"); else renderView(false);
+  };
+}
+
+/* ================= calculator ================= */
+const C = (() => { try { return JSON.parse(localStorage.getItem("aqsat:calc")) || null; } catch(e){ return null; } })() || {
+  mode:"one",
+  a:{price:"", down:"", dur:"3", unit:"y", freq:"monthly", rtype:"flat", rate:"", fees:""},
+  b:{price:"", down:"", dur:"5", unit:"y", freq:"monthly", rtype:"reducing", rate:"", fees:""},
+  r:{budget:"", down:"", dur:"3", unit:"y", freq:"monthly", rtype:"flat", rate:"", price:""}
+};
+const saveC = () => { try{ localStorage.setItem("aqsat:calc", JSON.stringify(C)); }catch(e){} };
+const pnum = v => { const x = parseFloat(String(v??"").replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[^\d.]/g,"")); return isNaN(x) ? 0 : x; };
+function annuity(P, i, n){ return i === 0 ? P/n : P*i/(1 - Math.pow(1+i, -n)); }
+function periodsOf(o){ const months = pnum(o.dur) * (o.unit === "y" ? 12 : 1); const step = STEP[o.freq]; return {months, step, n:Math.max(0, Math.round(months/step))}; }
+function calcOffer(o){
+  const price = pnum(o.price), down = Math.min(pnum(o.down), price), r = pnum(o.rate)/100, feePct = pnum(o.fees)/100;
+  const {months, step, n} = periodsOf(o);
+  const P = price - down;
+  if (!(price > 0) || !(n >= 1) || !(P > 0)) return null;
+  const fee = P * feePct, i = r * step/12;
+  let inst, rows = [];
+  if (o.rtype === "flat"){
+    const interest = P * r * months/12; inst = (P + interest)/n;
+    for (let k = 1; k <= n; k++) rows.push({k, inst, int:interest/n, prin:P/n, bal:P - P/n*k});
+  } else {
+    inst = annuity(P, i, n); let bal = P;
+    for (let k = 1; k <= n; k++){ const it = bal*i, pr = inst - it; bal = Math.max(0, bal - pr); rows.push({k, inst, int:it, prin:pr, bal}); }
+  }
+  const totalInst = inst*n, total = down + totalInst + fee, extra = total - price;
+  // effective reducing annual rate (incl. fees) via bisection
+  let eff = null;
+  const net = P - fee;
+  if (net > 0 && totalInst > net + 0.01){
+    let lo = 0, hi = 1;
+    for (let t = 0; t < 80; t++){ const mid = (lo+hi)/2; if (annuity(net, mid, n) > inst) hi = mid; else lo = mid; }
+    eff = (lo+hi)/2 * 12/step * 100;
+  } else if (net > 0) eff = 0;
+  return {price, down, P, n, step, months, inst, total, totalInst, extra, pct: extra/price*100, fee, interest: totalInst - P, rows, eff, freq:o.freq};
+}
+const pct = x => nf.format(Math.round(x*10)/10) + "٪";
+function offerInputs(key, o, compact){
+  const f = (k, label, ph, mode="decimal") => `<div class="field"><label for="c_${key}_${k}">${label}</label><input id="c_${key}_${k}" class="input num" inputmode="${mode}" placeholder="${ph}" data-c="${key}.${k}" value="${esc(o[k])}"></div>`;
+  const seg = (k, opts) => `<div class="seg" data-cseg="${key}.${k}">${opts.map(([v,l]) => `<button type="button" data-v="${v}" class="${o[k]===v?"on":""}">${l}</button>`).join("")}</div>`;
+  return `${f("price","السعر كاش","مثلاً ٥٠٠٠٠٠")}
+    ${f("down","المقدم","٠")}
+    <div class="${compact ? "" : "c-row2"}">${f("dur","المدة","٣","numeric")}<div class="field"><label>&nbsp;</label>${seg("unit",[["y","سنين"],["m","شهور"]])}</div></div>
+    <div class="field"><label>القسط كل</label>${seg("freq", compact ? [["monthly","شهر"],["quarterly","٣ شهور"],["yearly","سنة"]] : Object.keys(STEP).map(k => [k, FREQ_AR[k]]))}</div>
+    <div class="field"><label>نوع الفايدة</label>${seg("rtype",[["flat","ثابتة"],["reducing","متناقصة"]])}${compact ? "" : `<div class="hint">الثابتة بتاعة المحلات والمعارض، والمتناقصة بتاعة البنوك.</div>`}</div>
+    <div class="${compact ? "" : "two"}">${f("rate","الفايدة السنوية ٪","مثلاً ١٥")}${f("fees","مصاريف إدارية ٪","٠")}</div>`;
+}
+function viewCalc(){
+  return `<div class="seg big" style="margin-bottom:16px" data-cmode>
+      ${[["one","احسب القسط"],["cmp","قارن عرضين"],["rev","على قد ميزانيتي"]].map(([v,l]) => `<button type="button" data-v="${v}" class="${C.mode===v?"on":""}">${l}</button>`).join("")}
+    </div>
+    <div id="calcBody">${calcBody()}</div>`;
+}
+function calcBody(){
+  if (C.mode === "one") return `<div class="c-box">${offerInputs("a", C.a)}</div><div id="cOut"></div>`;
+  if (C.mode === "cmp") return `<div class="cmp"><div class="c-box" id="boxA"><h3>العرض الأول</h3>${offerInputs("a", C.a, true)}</div><div class="c-box" id="boxB"><h3>العرض التاني</h3>${offerInputs("b", C.b, true)}</div></div><div id="cOut" style="margin-top:12px"></div>`;
+  const o = C.r;
+  const f = (k, label, ph, mode="decimal") => `<div class="field"><label for="c_r_${k}">${label}</label><input id="c_r_${k}" class="input num" inputmode="${mode}" placeholder="${ph}" data-c="r.${k}" value="${esc(o[k])}"></div>`;
+  const seg = (k, opts) => `<div class="seg" data-cseg="r.${k}">${opts.map(([v,l]) => `<button type="button" data-v="${v}" class="${o[k]===v?"on":""}">${l}</button>`).join("")}</div>`;
+  return `<div class="c-box">
+    ${f("budget","أقدر أدفع في القسط الواحد","مثلاً ٣٠٠٠")}
+    <div class="two">${f("down","المقدم المتاح","٠")}${f("rate","الفايدة السنوية ٪","مثلاً ١٥")}</div>
+    <div class="field"><label>نوع الفايدة</label>${seg("rtype",[["flat","ثابتة"],["reducing","متناقصة"]])}</div>
+    <div class="field"><label>القسط كل</label>${seg("freq", Object.keys(STEP).map(k => [k, FREQ_AR[k]]))}</div>
+    <div class="c-row2">${f("dur","المدة","٣","numeric")}<div class="field"><label>&nbsp;</label>${seg("unit",[["y","سنين"],["m","شهور"]])}</div></div>
+    ${f("price","سعر حاجة معينة (اختياري)","عشان أعرف أقل مدة")}
+  </div><div id="cOut"></div>`;
+}
+const perAr = f => ({monthly:"في الشهر", quarterly:"كل ٣ شهور", semiannual:"كل ٦ شهور", yearly:"في السنة"}[f]);
+function renderCalcOut(anim){
+  const out = $("#cOut"); if (!out) return;
+  let h = "";
+  if (C.mode === "one"){
+    const R = calcOffer(C.a);
+    if (!R){ out.innerHTML = `<div class="empty-state" style="padding:24px"><p>اكتب السعر والمدة وهتظهر النتيجة هنا على طول.</p></div>`; return; }
+    const flat = C.a.rtype === "flat";
+    h += `<div class="c-res"><div class="lbl">القسط</div><div class="big num">${money(R.inst)} <small>${perAr(R.freq)}</small></div>
+      <div class="c-grid"><div><small>عدد الأقساط</small><strong class="num">${num(R.n)}</strong></div><div><small>إجمالي هتدفعه</small><strong class="num">${money(R.total)}</strong></div>
+      <div class="hot"><small>زيادة عن الكاش</small><strong class="num">${money(R.extra)}</strong></div><div class="hot"><small>نسبة الزيادة</small><strong class="num">${pct(R.pct)}</strong></div></div></div>`;
+    if (flat && pnum(C.a.rate) > 0 && R.eff != null) h += `<div class="c-note">الفايدة <b>${pct(pnum(C.a.rate))} ثابتة</b> تساوي فعلياً حوالي <b class="num">${pct(R.eff)}</b> متناقصة${R.fee ? " بالمصاريف" : ""}. ده الرقم اللي تقارنه بفايدة البنك.</div>`;
+    else if (!flat && R.fee > 0 && R.eff != null) h += `<div class="c-note">بالمصاريف الإدارية، الفايدة الفعلية حوالي <b class="num">${pct(R.eff)}</b> مش ${pct(pnum(C.a.rate))}.</div>`;
+    // chart
+    const maxB = 60, rows = R.rows, step = Math.ceil(rows.length / maxB), bars = [];
+    for (let k = 0; k < rows.length; k += step) bars.push(rows[k]);
+    const mx = Math.max(...bars.map(r => r.inst));
+    h += `<div class="c-box"><h3>كل قسط بيروح فين</h3>
+      <div class="c-chart" aria-hidden="true">${bars.map(r => `<i style="height:${r.inst/mx*100}%"><b style="height:${r.prin/r.inst*100}%"></b><u style="height:${r.int/r.inst*100}%"></u></i>`).join("")}</div>
+      <div class="c-legend"><span>أصل المبلغ ${money(R.P)}</span><span class="g">فايدة ${money(R.interest)}</span></div>
+      ${flat ? `<p class="hint" style="margin-top:6px">في الثابتة كل قسط فيه نفس نسبة الفايدة. في المتناقصة الفايدة بتقل مع الوقت.</p>` : ""}
+      <details class="adv" style="margin-top:10px"><summary>${ICON.down} جدول السداد</summary><div class="c-scroll"><table class="c-table num"><thead><tr><th>#</th><th>القسط</th><th>فايدة</th><th>أصل</th><th>الباقي</th></tr></thead><tbody>
+      ${rows.map(r => `<tr><td>${num(r.k)}</td><td>${nf.format(Math.round(r.inst))}</td><td>${nf.format(Math.round(r.int))}</td><td>${nf.format(Math.round(r.prin))}</td><td>${nf.format(Math.round(r.bal))}</td></tr>`).join("")}</tbody></table></div></details></div>
+      <button class="btn gold block" id="toPlan">حوّله لقسط</button>`;
+  } else if (C.mode === "cmp"){
+    const A = calcOffer(C.a), B = calcOffer(C.b);
+    $("#boxA")?.classList.remove("win"); $("#boxB")?.classList.remove("win");
+    if (!A || !B){ out.innerHTML = `<div class="empty-state" style="padding:20px"><p>املا العرضين وهقولك أنهي أوفر.</p></div>`; return; }
+    const w = A.total <= B.total ? "A" : "B", diff = Math.abs(A.total - B.total);
+    $("#box" + w)?.classList.add("win");
+    const col = (R, nm, isW) => `<div class="c-box ${isW ? "win" : ""}"><h3>${nm}${isW ? '<span class="tag">الأوفر</span>' : ""}</h3>
+      <div class="k">القسط</div><div class="v num">${money(R.inst)}</div><div class="k">${num(R.n)} قسط ${FREQ_AR[R.freq]}</div>
+      <div class="k">الإجمالي</div><div class="v num">${money(R.total)}</div>
+      <div class="k">الزيادة عن الكاش</div><div class="v num">${money(R.extra)} <small>(${pct(R.pct)})</small></div>
+      <div class="k">الفايدة الفعلية</div><div class="v num">${R.eff != null ? pct(R.eff) : "—"}</div>
+      <button class="btn block" style="margin-top:10px;padding:9px;font-size:13px" data-toplan="${nm === "العرض الأول" ? "a" : "b"}">حوّله لقسط</button></div>`;
+    h += `<div class="c-note">${diff < 1 ? "العرضين تقريباً نفس التكلفة." : `<b>${w === "A" ? "العرض الأول" : "العرض التاني"}</b> أوفر بـ <b class="num">${money(diff)}</b> في الإجمالي.`}
+      ${A.freq === B.freq && Math.abs(A.inst - B.inst) > 1 ? `<br>بس قسطه ${(w === "A" ? A.inst > B.inst : B.inst > A.inst) ? "أعلى" : "أقل"} بـ <b class="num">${money(Math.abs(A.inst - B.inst))}</b> ${perAr(A.freq)}.` : ""}</div>
+      <div class="cmp">${col(A, "العرض الأول", w === "A")}${col(B, "العرض التاني", w === "B")}</div>`;
+  } else {
+    const o = C.r, budget = pnum(o.budget), down = pnum(o.down), r = pnum(o.rate)/100, {months, step, n} = periodsOf(o);
+    if (!(budget > 0) || !(n >= 1)){ out.innerHTML = `<div class="empty-state" style="padding:24px"><p>اكتب القسط اللي تقدر عليه والمدة.</p></div>`; return; }
+    const i = r*step/12;
+    const P = o.rtype === "flat" ? budget*n/(1 + r*months/12) : (i === 0 ? budget*n : budget*(1 - Math.pow(1+i, -n))/i);
+    h += `<div class="c-res"><div class="lbl">أقصى سعر تقدر تشتريه</div><div class="big num">${money(P + down)}</div>
+      <div class="c-grid"><div><small>بالقسط</small><strong class="num">${money(budget)}</strong></div><div><small>على</small><strong class="num">${num(n)} قسط</strong></div>
+      <div><small>المقدم</small><strong class="num">${money(down)}</strong></div><div class="hot"><small>إجمالي هتدفعه</small><strong class="num">${money(budget*n + down)}</strong></div></div></div>`;
+    const price = pnum(o.price);
+    if (price > 0){
+      const PP = price - down;
+      if (PP <= 0) h += `<div class="c-note">المقدم يغطي السعر كله، مش محتاج قسط.</div>`;
+      else {
+        let best = null;
+        for (let k = 1; k <= 600; k++){
+          const mth = k*step; const inst = o.rtype === "flat" ? PP*(1 + r*mth/12)/k : annuity(PP, i, k);
+          if (inst <= budget + 0.005){ best = {k, inst, mth}; break; }
+        }
+        h += best ? `<div class="c-note">عشان تشتري بـ <b class="num">${money(price)}</b>، أقل مدة <b class="num">${num(best.k)} قسط</b> (${best.mth % 12 === 0 ? num(best.mth/12) + " سنة" : num(best.mth) + " شهر"}) بقسط <b class="num">${money(best.inst)}</b>.</div>
+          <button class="btn gold block" id="toPlanR" data-k="${best.k}" data-inst="${best.inst}">حوّله لقسط</button>`
+          : `<div class="c-note">بالقسط ده والفايدة دي مش هتقدر تخلص المبلغ ده حتى على مدة طويلة جداً. زوّد المقدم أو القسط.</div>`;
+      }
+    }
+  }
+  out.innerHTML = h;
+  if (anim){ out.classList.remove("flash"); void out.offsetWidth; out.classList.add("flash"); }
+}
+function planFromCalc(R, name){
+  closeSheet(true);
+  openForm(null, {name:name||"", amount:Math.round(R.inst*100)/100, count:R.n, freq:R.freq, totalAmount:Math.round(R.total), firstDate:addMonths(todayISO(), R.step)});
+}
+let cTimer;
+function bindCalc(){
+  const m = $("#main");
+  renderCalcOut(false);
+  m.oninput = e => {
+    const t = e.target, k = t.dataset.c; if (!k) return;
+    const [g, f] = k.split("."); C[g][f] = t.value; saveC();
+    clearTimeout(cTimer); cTimer = setTimeout(() => renderCalcOut(false), 120);
+  };
+  m.onclick = e => {
+    const md = e.target.closest("[data-cmode] [data-v]");
+    if (md){ C.mode = md.dataset.v; saveC(); md.parentNode.querySelectorAll("button").forEach(b => b.classList.toggle("on", b === md)); $("#calcBody").innerHTML = calcBody(); $("#calcBody").classList.remove("flash"); void $("#calcBody").offsetWidth; $("#calcBody").classList.add("flash"); renderCalcOut(false); return; }
+    const sg = e.target.closest("[data-cseg] [data-v]");
+    if (sg){ const [g, f] = sg.parentNode.dataset.cseg.split("."); C[g][f] = sg.dataset.v; saveC(); sg.parentNode.querySelectorAll("button").forEach(b => b.classList.toggle("on", b === sg)); renderCalcOut(true); return; }
+    if (e.target.closest("#toPlan")){ const R = calcOffer(C.a); if (R) planFromCalc(R); return; }
+    const tp = e.target.closest("[data-toplan]"); if (tp){ const R = calcOffer(C[tp.dataset.toplan]); if (R) planFromCalc(R); return; }
+    const tr = e.target.closest("#toPlanR"); if (tr){ const o = C.r, step = STEP[o.freq], k = +tr.dataset.k, inst = +tr.dataset.inst; planFromCalc({inst, n:k, freq:o.freq, total:inst*k + pnum(o.down), step}); }
   };
 }
 

@@ -1,5 +1,5 @@
 // يخلي التطبيق يفتح أوفلاين
-const CACHE = "aqsat-v2";
+const CACHE = "aqsat-v3";
 const CORE = ["./", "./index.html", "./manifest.json", "./icon.svg", "./icon-192.png", "./icon-512.png",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js",
   "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"];
