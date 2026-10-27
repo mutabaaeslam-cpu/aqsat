@@ -142,7 +142,11 @@ main{padding:0 16px 130px}
 .input{width:100%;background:var(--surface-2);border:1.5px solid transparent;border-radius:12px;padding:11px 14px;font-size:16px;transition:border-color .2s,background .2s;direction:rtl}
 .input:focus{outline:none;border-color:var(--brand-2);background:var(--surface)}
 .input.err{border-color:var(--warn)}
-input[type=date].input{direction:ltr;text-align:right}
+.dwrap{position:relative}
+.dwrap .dtext{direction:ltr;text-align:right;padding-left:46px}
+.dwrap .dpick{position:absolute;left:4px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:var(--ink-2)}
+.dwrap .dpick svg{width:20px;height:20px}
+.dwrap .dnative{position:absolute;left:4px;bottom:0;width:38px;height:2px;opacity:0;pointer-events:none;border:0}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .seg{display:flex;background:var(--surface-2);border-radius:13px;padding:4px;gap:4px}
 .seg button{flex:1;padding:8px 4px;border-radius:10px;font-weight:700;font-size:13.5px;color:var(--ink-2);transition:background .25s,color .25s}
@@ -278,6 +282,35 @@ const fdate = iso => iso ? dfLong.format(new Date(iso + "T00:00:00Z")) : "";
 const todayISO = () => { const d = new Date(); return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())).toISOString().slice(0,10); };
 const daysBetween = (a, b) => Math.round((new Date(b+"T00:00:00Z") - new Date(a+"T00:00:00Z")) / 864e5);
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c=="x"?r:(r&3|8)).toString(16); }));
+function isoToDMY(iso){ if (!iso) return ""; const [y,m,d] = iso.split("-"); return `${d}/${m}/${y}`; }
+function dmyToISO(t){
+  const s = String(t||"").replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).trim();
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); if (!m) return null;
+  const d = +m[1], mo = +m[2], y = +m[3]; if (mo < 1 || mo > 12 || d < 1 || y < 1900 || y > 2200) return null;
+  const dim = new Date(Date.UTC(y, mo, 0)).getUTCDate(); if (d > dim) return null;
+  return `${y}-${String(mo).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+}
+const CAL_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
+function dateInput(attrs, iso){
+  return `<div class="dwrap"><input class="input dtext num" inputmode="numeric" placeholder="يوم / شهر / سنة" maxlength="10" autocomplete="off" value="${isoToDMY(iso)}" ${attrs}><button type="button" class="dpick" aria-label="اختيار من التقويم">${CAL_IC}</button><input type="date" class="dnative" tabindex="-1" aria-hidden="true"></div>`;
+}
+document.addEventListener("input", e => {
+  const t = e.target; if (!t.classList?.contains("dtext") || e.isTrusted === false) return;
+  let v = t.value.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+  if (e.inputType && e.inputType.startsWith("delete")) { t.value = v; return; }
+  const dg = v.replace(/\D/g, "").slice(0, 8);
+  let o = dg.slice(0,2); if (dg.length >= 2) o += "/" + dg.slice(2,4); if (dg.length >= 4) o += "/" + dg.slice(4,8);
+  if (dg.length === 2 || dg.length === 4) {} 
+  t.value = o;
+  t.classList.toggle("err", o.length === 10 && !dmyToISO(o));
+}, true);
+document.addEventListener("click", e => {
+  const b = e.target.closest(".dpick"); if (!b) return;
+  const w = b.closest(".dwrap"), txt = $(".dtext", w), nat = $(".dnative", w);
+  nat.value = dmyToISO(txt.value) || todayISO();
+  nat.onchange = () => { if (nat.value){ txt.value = isoToDMY(nat.value); txt.classList.remove("err"); txt.dispatchEvent(new Event("input", {bubbles:true})); } };
+  try { nat.showPicker(); } catch(_) { nat.focus(); nat.click(); }
+});
 const STEP = {monthly:1, quarterly:3, semiannual:6, yearly:12};
 const FREQ_AR = {monthly:"شهري", quarterly:"ربع سنوي", semiannual:"نصف سنوي", yearly:"سنوي"};
 const FREQ_FROM_AR = {"شهري":"monthly","ربع سنوي":"quarterly","نصف سنوي":"semiannual","سنوي":"yearly"};
@@ -690,13 +723,13 @@ function openPay(pid, key, rowEl){
     <label for="pa" class="hidden">المبلغ المدفوع</label>
     <input id="pa" class="amount-big num" inputmode="decimal" value="${it.amount}">
     <p style="text-align:center;font-size:12px;color:var(--ink-3);margin-bottom:14px">لو دفعت مبلغ مختلف (غرامة أو خصم) عدّله هنا</p>
-    <div class="field"><label for="pd">تاريخ الدفع</label><input id="pd" type="date" class="input" value="${todayISO()}"></div>
+    <div class="field"><label for="pd">تاريخ الدفع</label>${dateInput('id="pd"', todayISO())}</div>
     <div class="field"><label for="pn">ملاحظة (اختياري)</label><input id="pn" class="input" placeholder="مثلاً: اتدفع كاش"></div>
     <button class="btn gold block" id="pok">تأكيد الدفع</button></div>`);
   $("#pok").onclick = () => {
     const amount = parseFloat(String($("#pa").value).replace(/[^\d.]/g,"")); if (!(amount >= 0)) return $("#pa").focus();
     const data = structuredClone(r.data); data.payments = data.payments || {};
-    data.payments[key] = {amount, paidAt:$("#pd").value || todayISO(), note:$("#pn").value.trim() || undefined};
+    data.payments[key] = {amount, paidAt:dmyToISO($("#pd").value) || todayISO(), note:$("#pn").value.trim() || undefined};
     closeSheet(); celebrate();
     const target = rowEl || document.querySelector(`[data-row="${pid}|${key}"]`);
     if (target){ target.classList.add("going"); setTimeout(() => { putPlan(pid, data); renderView(false); }, 450); } else { putPlan(pid, data); setTimeout(() => renderView(false), 300); }
@@ -800,8 +833,8 @@ function openForm(pid){
     const old = F.kind === "old" && !isEdit;
     $("#dateBox").innerHTML = old ? `<div class="two">
         <div class="field"><label for="f_lastNo">رقم آخر قسط اتدفع</label><input id="f_lastNo" class="input num" inputmode="numeric" value="${F._lastNo??""}"></div>
-        <div class="field"><label for="f_lastDate">تاريخه</label><input id="f_lastDate" type="date" class="input" value="${F._lastDate??""}"></div></div>`
-      : `<div class="field"><label for="f_first">ميعاد أول قسط</label><input id="f_first" type="date" class="input" value="${F.firstDate||todayISO()}"></div>`;
+        <div class="field"><label for="f_lastDate">تاريخه</label>${dateInput('id="f_lastDate"', F._lastDate)}</div></div>`
+      : `<div class="field"><label for="f_first">ميعاد أول قسط</label>${dateInput('id="f_first"', F.firstDate||todayISO())}</div>`;
     $("#dateBox").oninput = preview;
   }
   function drawPh(){
@@ -814,7 +847,7 @@ function openForm(pid){
   function drawEx(){
     $("#exs").innerHTML = F.extras.map((e,i) => `<div style="border-bottom:1px dashed var(--line);padding-bottom:8px;margin-bottom:8px">
       <div class="mini-row" style="grid-template-columns:1fr 34px"><input class="input" placeholder="اسمها، مثلاً: الدفعة السنوية" data-ex="${i}" data-k="label" value="${esc(e.label||"")}"><button type="button" class="x" data-rex="${i}" aria-label="حذف">${ICON.close}</button></div>
-      <div class="mini-row" style="grid-template-columns:1fr 1fr"><input class="input num" inputmode="decimal" placeholder="المبلغ" data-ex="${i}" data-k="amount" value="${e.amount??""}"><input type="date" class="input" data-ex="${i}" data-k="date" value="${e.date||""}" aria-label="تاريخها"></div>
+      <div class="mini-row" style="grid-template-columns:1fr 1fr"><input class="input num" inputmode="decimal" placeholder="المبلغ" data-ex="${i}" data-k="amount" value="${e.amount??""}">${dateInput(`data-ex="${i}" data-k="date" aria-label="تاريخها"`, e.date)}</div>
       <div class="mini-row" style="grid-template-columns:1fr 1fr">
         <select class="input" data-ex="${i}" data-k="repeatMonths" aria-label="التكرار">${[[0,"مرة واحدة"],[12,"كل سنة"],[6,"كل ٦ شهور"],[3,"كل ٣ شهور"]].map(([v,l]) => `<option value="${v}" ${+e.repeatMonths===v?"selected":""}>${l}</option>`).join("")}</select>
         <input class="input num ${+e.repeatMonths ? "" : "hidden"}" inputmode="numeric" placeholder="كام مرة" data-ex="${i}" data-k="times" value="${e.times??""}" aria-label="عدد المرات">
@@ -822,14 +855,15 @@ function openForm(pid){
   }
   function collect(){
     F.name = val("f_name"); F.amount = n("f_amount"); F.count = n("f_count"); F.totalAmount = n("f_total"); F.lastAmount = n("f_last");
-    if ($("#f_first")) F.firstDate = val("f_first");
-    if ($("#f_lastNo")){ F._lastNo = n("f_lastNo"); F._lastDate = val("f_lastDate"); }
+    if ($("#f_first")) F.firstDate = dmyToISO(val("f_first"));
+    if ($("#f_lastNo")){ F._lastNo = n("f_lastNo"); F._lastDate = dmyToISO(val("f_lastDate")); }
   }
   function preview(){
     collect();
     const step = STEP[F.freq], pv = $("#pv");
     let first = F.firstDate;
     if (F.kind === "old" && !isEdit){ first = (F._lastNo && F._lastDate) ? addMonths(F._lastDate, -(F._lastNo-1)*step) : null; }
+    if (F.kind === "old" && !isEdit && F._lastNo && F.count && F._lastNo > F.count){ pv.innerHTML = `<span style="color:var(--warn);font-weight:700">رقم آخر قسط (${num(F._lastNo)}) أكبر من عدد الأقساط (${num(F.count)}). راجع الرقمين.</span>`; return; }
     if (!F.amount || !F.count || !first){ pv.innerHTML = "اكتب قيمة القسط وعدده والتاريخ وهتشوف الملخص هنا."; return; }
     const tmp = {...F, firstDate:first, phases:F.phases.filter(ph => ph.from && ph.to && ph.amount), extras:F.extras.filter(e => e.amount && e.date)};
     const items = schedule(tmp), total = items.reduce((s,i) => s + i.amount, 0), last = addMonths(first, (F.count-1)*step);
@@ -847,7 +881,7 @@ function openForm(pid){
   form.addEventListener("input", e => {
     const t = e.target;
     if (t.dataset.ph != null){ F.phases[t.dataset.ph][t.dataset.k] = t.value === "" ? null : +t.value.replace(/[^\d.]/g,""); }
-    if (t.dataset.ex != null){ const k = t.dataset.k; F.extras[t.dataset.ex][k] = (k === "label" || k === "date") ? t.value : (t.value === "" ? null : +t.value); if (k === "repeatMonths") drawEx(); }
+    if (t.dataset.ex != null){ const k = t.dataset.k; F.extras[t.dataset.ex][k] = k === "label" ? t.value : k === "date" ? dmyToISO(t.value) : (t.value === "" ? null : +t.value); if (k === "repeatMonths") drawEx(); }
     preview();
   });
   form.addEventListener("change", e => { if (e.target.dataset.k === "repeatMonths"){ F.extras[e.target.dataset.ex].repeatMonths = +e.target.value; drawEx(); preview(); } });
@@ -873,13 +907,13 @@ function openForm(pid){
       payments:F.payments||{}, completed:!!F.completed, completedAt:F.completedAt, createdAt:F.createdAt||new Date().toISOString(), kind:F.kind};
     if (F.kind === "old" && !isEdit){
       if (!F._lastNo || F._lastNo < 1 || F._lastNo > F.count) return fail("رقم آخر قسط لازم يبقى بين ١ وعدد الأقساط.", "f_lastNo");
-      if (!F._lastDate) return fail("اكتب تاريخ آخر قسط اتدفع.", "f_lastDate");
+      if (!F._lastDate) return fail("اكتب تاريخ آخر قسط اتدفع صح: يوم / شهر / سنة.", "f_lastDate");
       out.firstDate = addMonths(F._lastDate, -(F._lastNo-1)*step);
       const sch = schedule(out);
       sch.filter(it => !it.extra && it.no <= F._lastNo).forEach(it => out.payments[it.key] = {amount:it.amount, paidAt:it.date, imported:true});
       sch.filter(it => it.extra && it.date <= F._lastDate).forEach(it => out.payments[it.key] = {amount:it.amount, paidAt:it.date, imported:true});
     } else {
-      if (!F.firstDate) return fail("حدد ميعاد أول قسط.", "f_first");
+      if (!F.firstDate) return fail("اكتب ميعاد أول قسط صح: يوم / شهر / سنة.", "f_first");
       out.firstDate = F.firstDate;
       // drop payments that no longer exist
       const keys = new Set(schedule(out).map(i => i.key)); for (const k in out.payments) if (!keys.has(k)) delete out.payments[k];
