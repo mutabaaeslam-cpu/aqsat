@@ -301,6 +301,7 @@ const SB_URL = "https://slntplduuebgvvjmawlb.supabase.co";
 const SB_KEY = "sb_publishable_4ow1NuTo6DJN6aEqy-XzlQ_nWllW6Xc";
 const DOMAIN = "@aqsat.app";
 const CAL_URL = SB_URL + "/functions/v1/calendar?token=";
+const VAPID = "BKPEFVsAZ1bR_uzrwOVr7rI8OsKbQ5TYwVstpMBTRcvYOSB2Xx0V2F3q4Ask2-FlqkYJRGDhX_03eDSfdSyq8yE";
 const sb = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY, {auth:{persistSession:true,autoRefreshToken:true}}) : null;
 
 /* ================= helpers ================= */
@@ -532,6 +533,7 @@ function renderLocked(){
 }
 async function logout(){
   if (Object.values(S.plans).some(r => r.dirty) && !S.status?.locked && !confirm("فيه تغييرات لسه متزامنتش، لو خرجت دلوقتي هتضيع. تخرج برضه؟")) return;
+  try{ const sub = await currentSub(); if (sub){ await sb.from("push_subs").delete().eq("endpoint", sub.endpoint); await sub.unsubscribe(); } }catch(e){}
   try{ await sb.auth.signOut(); }catch(e){}
   try{ localStorage.removeItem(lsKey()); }catch(e){}
   S.user = null; S.status = null; S.plans = {}; closeSheet(true); render();
@@ -654,6 +656,10 @@ function card({r, s}, t){
 function viewSettings(){
   const tok = S.status.calendar_token, link = tok ? CAL_URL + tok : "";
   return `
+  <div class="set-card"><h3>الإشعارات</h3>
+    <p>تنبيه على الموبايل قبل كل قسط بيوم، ويوم الميعاد الصبح، وكل ٣ أيام لو القسط اتأخر.</p>
+    <div id="pushBox"><span class="spin" style="color:var(--ink-3);width:18px;height:18px"></span></div>
+  </div>
   <div class="set-card"><h3>جوجل كالندر</h3>
     <p>ضيف الرابط ده مرة واحدة في جوجل كالندر على أي إيميل، وكل الأقساط الجاية هتظهر وتتحدّث لوحدها.</p>
     ${link ? `<div class="linkbox" id="cal">${esc(link)}</div>
@@ -698,6 +704,7 @@ function bindView(){
   $("#expX").onclick = exportExcel; $("#expJ").onclick = exportJSON; $("#tpl").onclick = downloadTemplate;
   $("#imp").onclick = () => $("#impF").click(); $("#impF").onchange = e => { const f = e.target.files[0]; if (f) importFile(f); e.target.value = ""; };
   $("#chpw").onclick = () => renderChangePw(false); $("#lo").onclick = logout;
+  paintPush();
 }
 
 /* ================= sheet ================= */
@@ -956,6 +963,58 @@ function openForm(pid, prefill){
     toast(isEdit ? "اتحفظت التعديلات" : "اتضاف القسط");
     if (!isEdit && S.tab === "settings") go("due"); else renderView(false);
   };
+}
+
+/* ================= push notifications ================= */
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+function b64u(s){ const p = "=".repeat((4 - s.length % 4) % 4), b = atob((s + p).replace(/-/g,"+").replace(/_/g,"/")); return Uint8Array.from(b, c => c.charCodeAt(0)); }
+async function swReg(){ if (!("serviceWorker" in navigator)) return null; try { return await Promise.race([navigator.serviceWorker.ready, new Promise(r => setTimeout(() => r(null), 4000))]); } catch(e){ return null; } }
+async function currentSub(){ const r = await swReg(); return r && r.pushManager ? r.pushManager.getSubscription() : null; }
+async function paintPush(){
+  const box = $("#pushBox"); if (!box) return;
+  const btns = h => `<div class="btns">${h}</div>`;
+  if (!("Notification" in window) || !("PushManager" in window)){
+    box.innerHTML = isIOS && !standalone
+      ? `<p style="margin:0">على الآيفون لازم تثبّت التطبيق الأول: من Safari دوس زرار المشاركة، وبعدها «Add to Home Screen»، وافتحه من الأيقونة وارجع هنا.</p>`
+      : `<p style="margin:0">المتصفح ده مش بيدعم الإشعارات. جرّب Chrome.</p>`;
+    return;
+  }
+  if (Notification.permission === "denied"){ box.innerHTML = `<p style="margin:0;color:var(--warn)">الإشعارات مقفولة للتطبيق ده. افتحها من إعدادات المتصفح أو الموبايل (Site settings، ثم Notifications).</p>`; return; }
+  const sub = await currentSub();
+  if (sub){
+    box.innerHTML = `<p style="color:var(--ok);font-weight:700">✓ الإشعارات شغالة على الجهاز ده</p>` + btns(`<button class="btn primary" id="pTest">جرّب إشعار</button><button class="btn danger" id="pOff">إيقاف</button>`);
+    $("#pTest").onclick = testPush; $("#pOff").onclick = disablePush;
+  } else {
+    box.innerHTML = btns(`<button class="btn primary" id="pOn">تفعيل الإشعارات</button>`);
+    $("#pOn").onclick = enablePush;
+  }
+}
+async function enablePush(){
+  if (!navigator.onLine) return toast("التفعيل محتاج نت");
+  const b = $("#pOn"); if (b){ b.disabled = true; b.innerHTML = '<span class="spin"></span>'; }
+  try{
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted"){ toast("لازم توافق على الإشعارات عشان توصلك"); return paintPush(); }
+    const reg = await swReg(); if (!reg) throw new Error("no sw");
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64u(VAPID)});
+    const j = sub.toJSON();
+    const { error } = await sb.from("push_subs").upsert({endpoint:j.endpoint, user_id:S.user.id, sub:j});
+    if (error) throw error;
+    toast("اتفعّلت الإشعارات"); await paintPush(); testPush(true);
+  }catch(e){ console.warn(e); toast("معرفتش أفعّل الإشعارات، جرب تاني"); paintPush(); }
+}
+async function testPush(quiet){
+  if (!navigator.onLine) return toast("محتاج نت");
+  const { data, error } = await sb.functions.invoke("notify", {body:{test:true}});
+  if (quiet === true) return;
+  toast(error ? "حصلت مشكلة في الإرسال" : data?.sent ? "اتبعت، هيوصلك خلال ثواني" : "مفيش جهاز متسجل، فعّل تاني");
+}
+async function disablePush(){
+  const sub = await currentSub();
+  if (sub){ try{ await sb.from("push_subs").delete().eq("endpoint", sub.endpoint); }catch(e){} try{ await sub.unsubscribe(); }catch(e){} }
+  toast("اتوقفت الإشعارات على الجهاز ده"); paintPush();
 }
 
 /* ================= calculator ================= */
